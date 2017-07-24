@@ -1,10 +1,13 @@
 package dev.nick.library;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 
 import org.newstand.logger.Logger;
 
@@ -21,20 +24,25 @@ public class RecBridgeService extends Service {
         return new RecBridgeBinder();
     }
 
-    public void start(IParam param) throws RemoteException {
+    public void start(IParam param) {
         Logger.d("Start called with param:%s", param);
     }
 
-    public void stop() throws RemoteException {
+    public void stop() {
 
     }
 
-    public boolean isRecording() throws RemoteException {
+    public boolean isRecording() {
         return false;
     }
 
-    public void watch(IWatcher w) throws RemoteException {
+    public void watch(IWatcher w) {
 
+    }
+
+    public boolean checkSelfPermission() {
+        return ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAPTURE_AUDIO_OUTPUT)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     public void unWatch(IWatcher w) throws RemoteException {
@@ -76,6 +84,11 @@ public class RecBridgeService extends Service {
         @Override
         public void unWatch(IWatcher w) throws RemoteException {
             RecBridgeService.this.unWatch(w);
+        }
+
+        @Override
+        public boolean checkSelfPermission() throws RemoteException {
+            return RecBridgeService.this.checkSelfPermission();
         }
 
     }

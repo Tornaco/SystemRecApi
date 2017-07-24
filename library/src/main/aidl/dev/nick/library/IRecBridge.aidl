@@ -14,4 +14,6 @@ interface IRecBridge {
 
     void watch(in IWatcher w);
     void unWatch(in IWatcher w);
+
+    boolean checkSelfPermission();
 }
