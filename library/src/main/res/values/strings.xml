@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Library</string>
+
+    <string name="recording">Recording\u2026</string>
+    <string name="recording_ready_to_share">Recording ready to share</string>
+    <string name="video_length">Video length: %s</string>
+    <string name="insufficient_storage">Insufficient storage</string>
+    <string name="share">Share</string>
+    <string name="stop">Stop</string>
+
+    <string name="not_enough_storage">Not enough storage available</string>
+    <string name="not_projection">Missing media projection permission</string>
 </resources>
