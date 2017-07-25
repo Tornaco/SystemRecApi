@@ -12,7 +12,6 @@ import org.newstand.logger.Logger;
 
 import dev.nick.eventbus.EventBus;
 import dev.nick.library.Events;
-import dev.nick.library.R;
 import dev.nick.library.RecBridgeApp;
 import lombok.experimental.var;
 
@@ -30,7 +29,7 @@ public class RecBridgeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_rec_bridge);
+        setTitle(null);
         resolveIntent();
     }
 

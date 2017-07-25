@@ -24,11 +24,14 @@ public class RecRequestAsker {
         void onRemember();
     }
 
-    public static void askForUser(Context context, String packageName, final Callback callback) {
+    public static void askForUser(Context context, String packageName, String description,
+                                  final Callback callback) {
         AlertDialog alertDialog = new AlertDialog.Builder(context)
                 .setTitle(R.string.rec_bridge_request_title)
                 .setMessage(context.getString(R.string.rec_bridge_request_message,
-                        getApplicationName(context, packageName)))
+                        getApplicationName(context, packageName))
+                        + "\n"
+                        + description)
                 .setCancelable(false)
                 .setPositiveButton(R.string.rec_bridge_request_allow, new DialogInterface.OnClickListener() {
                     @Override
@@ -41,7 +44,14 @@ public class RecRequestAsker {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         callback.onDeny();
                     }
-                }).create();
+                })
+                .setNegativeButton(R.string.rec_bridge_request_remember, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        callback.onRemember();
+                    }
+                })
+                .create();
         //noinspection ConstantConditions
         alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
         alertDialog.show();

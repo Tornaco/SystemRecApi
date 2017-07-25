@@ -50,6 +50,7 @@ import dev.nick.eventbus.EventBus;
 import dev.nick.eventbus.EventReceiver;
 import dev.nick.library.cast.RecordingDevice;
 import dev.nick.library.cast.ThreadUtil;
+import dev.nick.library.common.Holder;
 import dev.nick.library.ui.RecBridgeActivity;
 import dev.nick.library.ui.RecRequestAsker;
 import lombok.AllArgsConstructor;
@@ -247,7 +248,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
     }
 
-    public synchronized void start(RecRequest recRequest) {
+    public synchronized void start(final RecRequest recRequest) {
         // Check if we are recording.
         if (isRecording()) {
             Logger.w("Ignore start request in recording");
@@ -257,12 +258,20 @@ public class RecBridgeService extends Service implements Handler.Callback {
         final String pkgName = getApplicationContext().getPackageManager().getNameForUid(Binder.getCallingUid());
 
         if (TextUtils.isEmpty(pkgName)) {
-            Logger.w("Ignored bad pkg name from client");
+            Logger.w("Ignored, bad pkg name from client");
             return;
         }
 
         Logger.d("Start called with recRequest:%s, name:%s", recRequest, pkgName);
         mRecRequest = recRequest;
+
+        final Holder<String> description = new Holder<>();
+        try {
+            description.setData(recRequest.getClient().getDescription());
+        } catch (RemoteException e) {
+            Logger.w("Ignored, bad description from client");
+            return;
+        }
 
         boolean allowed = mSettingsProvider.isAppRecAllowed(pkgName);
         if (!allowed) {
@@ -270,7 +279,9 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 @Override
                 public void run() {
                     RecRequestAsker.askForUser(getApplicationContext(),
-                            pkgName, new RecRequestAsker.Callback() {
+                            pkgName,
+                            description.getData(),
+                            new RecRequestAsker.Callback() {
                                 @Override
                                 public void onAllow() {
                                     startRecBridgeActivity();
@@ -278,12 +289,17 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
                                 @Override
                                 public void onDeny() {
-
+                                    mSettingsProvider.setAppRecAllowed(pkgName, false);
+                                    try {
+                                        recRequest.getClient().onDeny();
+                                    } catch (Throwable e) {
+                                        Logger.e(e, "Error call onDeny");
+                                    }
                                 }
 
                                 @Override
                                 public void onRemember() {
-
+                                    mSettingsProvider.setAppRecAllowed(pkgName, true);
                                 }
                             });
                 }
