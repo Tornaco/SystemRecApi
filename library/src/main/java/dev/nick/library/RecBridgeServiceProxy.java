@@ -62,11 +62,11 @@ public class RecBridgeServiceProxy extends ServiceProxy implements IRecBridge {
     }
 
     @Override
-    public void start(final IParam param) throws RemoteException {
+    public void start(final IParam param, final IToken token) throws RemoteException {
         setTask(new ProxyTask() {
             @Override
             public void run() throws RemoteException {
-                bridge.start(param);
+                bridge.start(param, token);
             }
         });
     }

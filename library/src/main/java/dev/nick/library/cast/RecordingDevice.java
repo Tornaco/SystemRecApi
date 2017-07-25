@@ -215,7 +215,7 @@ public class RecordingDevice extends EncoderDevice {
         @Override
         public void encode() throws Exception {
             File recordingDir = mFile.getParentFile();
-            if (!recordingDir.mkdirs()) {
+            if (!recordingDir.exists() && !recordingDir.mkdirs()) {
                 throw new IOException("Cannot mkdirs " + recordingDir);
             }
             if (!(recordingDir.exists() && recordingDir.canWrite())) {

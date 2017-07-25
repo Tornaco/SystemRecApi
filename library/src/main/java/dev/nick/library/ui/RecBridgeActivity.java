@@ -1,4 +1,4 @@
-package dev.nick.library;
+package dev.nick.library.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +11,9 @@ import android.support.v7.app.AppCompatActivity;
 import org.newstand.logger.Logger;
 
 import dev.nick.eventbus.EventBus;
+import dev.nick.library.Events;
+import dev.nick.library.R;
+import dev.nick.library.RecBridgeApp;
 import lombok.experimental.var;
 
 /**

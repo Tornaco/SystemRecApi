@@ -21,6 +21,7 @@ import android.hardware.display.VirtualDisplay;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.media.projection.MediaProjection;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -33,6 +34,7 @@ import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -53,6 +55,12 @@ import dev.nick.eventbus.EventReceiver;
 import dev.nick.library.cast.MediaTools;
 import dev.nick.library.cast.RecordingDevice;
 import dev.nick.library.cast.ThreadUtil;
+import dev.nick.library.ui.RecBridgeActivity;
+import dev.nick.library.ui.RecRequestAsker;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.Delegate;
 
 /**
  * Created by Tornaco on 2017/7/24.
@@ -62,19 +70,21 @@ import dev.nick.library.cast.ThreadUtil;
 public class RecBridgeService extends Service implements Handler.Callback {
 
     private static final String SCREENCASTER_NAME = "hidden:screen-recording";
+
     private static final String ACTION_STOP_SCREENCAST = "stop.recording";
+    private static final String ACTION_START_SCREENCAST = "start.recording";
 
     private static final int SENSOR_SHAKE = 10;
 
     private final List<IWatcher> mWatchers = new ArrayList<>();
 
-    RecordingDevice mRecorder;
-    boolean mIsCasting;
+    private RecordingDevice mRecorder;
+    private boolean mIsCasting;
 
-    Handler sensorEventHandler;
+    private Handler mSensorEventHandler;
 
     private MediaProjection mProjection;
-    private IParam mParam;
+    private RecRequest mRecRequest;
 
     private long startTime;
     private Timer timer;
@@ -82,6 +92,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
     private Notification.Builder mBuilder;
     private SoundPool mSoundPool;
     private int mStartSound, mStopSound;
+
+    private SettingsProvider mSettingsProvider;
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -92,17 +104,17 @@ public class RecBridgeService extends Service implements Handler.Callback {
                     intent.getAction().equals(Intent.ACTION_SHUTDOWN)) {
                 stop();
             } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                if (mIsCasting && mParam != null && mParam.isStopOnShake()) {
+                if (mIsCasting && mRecRequest != null && mRecRequest.isStopOnShake()) {
                     stop();
                 }
             }
         }
     };
 
-    private SensorManager sensorManager;
-    private Vibrator vibrator;
+    private SensorManager mSensorManager;
+    private Vibrator mVibrator;
 
-    private SensorEventListener sensorEventListener = new SensorEventListener() {
+    private SensorEventListener mSensorEventListener = new SensorEventListener() {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
@@ -114,7 +126,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
             if (Math.abs(x) > mediumValue || Math.abs(y) > mediumValue || Math.abs(z) > mediumValue) {
                 Message msg = new Message();
                 msg.what = SENSOR_SHAKE;
-                sensorEventHandler.sendMessage(msg);
+                mSensorEventHandler.sendMessage(msg);
             }
         }
 
@@ -124,7 +136,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
     };
 
-    private EventReceiver eventReceiver = new EventReceiver() {
+    private EventReceiver mEventReceiver = new EventReceiver() {
         @Override
         public void onReceive(@NonNull Event event) {
             int e = event.getEventType();
@@ -173,15 +185,17 @@ public class RecBridgeService extends Service implements Handler.Callback {
         if (EventBus.getInstance() == null) {
             EventBus.create(getApplication()).setDebuggable(false);
         }
-        EventBus.getInstance().subscribe(eventReceiver);
+        EventBus.getInstance().subscribe(mEventReceiver);
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mVibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
-        sensorEventHandler = new Handler(this);
+        mSensorEventHandler = new Handler(this);
 
-        sensorManager.registerListener(sensorEventListener,
-                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+        mSettingsProvider = new SettingsProvider(getApplicationContext());
+
+        mSensorManager.registerListener(mSensorEventListener,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_NORMAL);
 
         mSoundPool = new SoundPool.Builder()
@@ -194,7 +208,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         mStopSound = mSoundPool.load(this, R.raw.video_stop, 1);
         mStartSound = mSoundPool.load(this, R.raw.video_record, 1);
-        stopCasting();
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_USER_BACKGROUND);
         filter.addAction(Intent.ACTION_SHUTDOWN);
@@ -225,14 +239,14 @@ public class RecBridgeService extends Service implements Handler.Callback {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventBus.getInstance().unSubscribe(eventReceiver);
+        EventBus.getInstance().unSubscribe(mEventReceiver);
 
         stopCasting();
         unregisterReceiver(mBroadcastReceiver);
         mSoundPool.release();
         mSoundPool = null;
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(sensorEventListener);
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
         }
         super.onDestroy();
         if (mProjection != null) try {
@@ -241,23 +255,59 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
     }
 
-    public synchronized void start(IParam param) {
+    public synchronized void start(RecRequest recRequest) {
         // Check if we are recording.
         if (isRecording()) {
             Logger.w("Ignore start request in recording");
             return;
         }
+        // Ask for user first.
+        final String pkgName = getApplicationContext().getPackageManager().getNameForUid(Binder.getCallingUid());
 
-        Logger.d("Start called with param:%s", param);
-        mParam = param;
+        if (TextUtils.isEmpty(pkgName)) {
+            Logger.w("Ignored bad pkg name from client");
+            return;
+        }
 
+        Logger.d("Start called with recRequest:%s, name:%s", recRequest, pkgName);
+        mRecRequest = recRequest;
 
+        boolean allowed = mSettingsProvider.isAppRecAllowed(pkgName);
+        if (!allowed) {
+            ThreadUtil.getMainThreadHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    RecRequestAsker.askForUser(getApplicationContext(),
+                            pkgName, new RecRequestAsker.Callback() {
+                                @Override
+                                public void onAllow() {
+                                    startRecBridgeActivity();
+                                }
+
+                                @Override
+                                public void onDeny() {
+
+                                }
+
+                                @Override
+                                public void onRemember() {
+
+                                }
+                            });
+                }
+            });
+            return;
+        }
+
+        startRecBridgeActivity();
+    }
+
+    private void startRecBridgeActivity() {
         Intent intent = new Intent(this, RecBridgeActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(RecBridgeActivity.ACTION_START_REC);
         startActivity(intent);
     }
-
 
     boolean startInternal() {
         Logger.d("startInternal");
@@ -289,7 +339,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
             registerScreenCaster();
 
-            if (mParam.isShutterSound()) {
+            if (mRecRequest.isShutterSound()) {
                 mSoundPool.play(mStartSound, 1.0f, 1.0f, 0, 0, 1.0f);
             }
 
@@ -343,9 +393,9 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
 
         // Find user preferred one.
-        boolean landscape = mParam.getOrientation() == Orientations.L;
+        boolean landscape = mRecRequest.getOrientation() == Orientations.L;
         int width, height;
-        int preferredResIndex = ValidResolutions.indexOf(mParam.getResolution());
+        int preferredResIndex = ValidResolutions.indexOf(mRecRequest.getResolution());
         if (preferredResIndex != ValidResolutions.INDEX_MASK_AUTO) {
             int[] resolution = ValidResolutions.$[preferredResIndex];
             if (landscape) {
@@ -371,7 +421,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
         assert mRecorder == null;
         Point size = getNativeResolution();
         mRecorder = new RecordingDevice(this, size.x, size.y,
-                mParam.getAudioSource(), mParam.getOrientation(), mParam.getFrameRate(), mParam.getPath());
+                mRecRequest.getAudioSource(), mRecRequest.getOrientation(), mRecRequest.getFrameRate(), mRecRequest.getPath());
         mRecorder.setProjection(mProjection);
         VirtualDisplay vd = mRecorder.registerVirtualDisplay(SCREENCASTER_NAME);
         if (vd == null) {
@@ -381,13 +431,18 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
     private void stopCasting() {
         cleanup();
-        if (!hasAvailableSpace()) {
-            Toast.makeText(this, R.string.insufficient_storage, Toast.LENGTH_LONG).show();
-        }
-        if (mIsCasting && mParam.isShutterSound()) {
+
+        if (mIsCasting && mRecRequest.isShutterSound()) {
             mSoundPool.play(mStopSound, 1.0f, 1.0f, 0, 0, 1.0f);
         }
         mIsCasting = false;
+
+        // Clean up request.
+        if (mRecRequest != null) {
+            mRecRequest.getClient().unLinkToDeath();
+            mRecRequest = null;
+        }
+
         notifyUncasting();
     }
 
@@ -397,6 +452,9 @@ public class RecBridgeService extends Service implements Handler.Callback {
             return START_NOT_STICKY;
         if (ACTION_STOP_SCREENCAST.equals(intent.getAction())) {
             stop();
+        }
+        if (ACTION_START_SCREENCAST.equals(intent.getAction())){
+
         }
         return START_STICKY;
     }
@@ -507,6 +565,14 @@ public class RecBridgeService extends Service implements Handler.Callback {
         stopCasting();
     }
 
+    public void onClientDie(TokenClient client) {
+        if (client == mRecRequest.getClient() && isRecording()) {
+            stop();
+        } else {
+            client.unLinkToDeath();
+        }
+    }
+
     public boolean isRecording() {
         return mIsCasting;
     }
@@ -556,10 +622,10 @@ public class RecBridgeService extends Service implements Handler.Callback {
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case SENSOR_SHAKE:
-                boolean shouldHandle = isRecording() && mParam != null && mParam.isStopOnShake();
+                boolean shouldHandle = isRecording() && mRecRequest != null && mRecRequest.isStopOnShake();
                 if (!shouldHandle) return true;
                 if (mIsCasting) {
-                    vibrator.vibrate(100);
+                    mVibrator.vibrate(100);
                     stop();
                 }
                 return true;
@@ -581,7 +647,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         @Override
         public void start(IParam param, IToken token) throws RemoteException {
-            RecBridgeService.this.start(param);
+            TokenClient tokenClient = new TokenClient(token);
+            RecBridgeService.this.start(new RecRequest(param, tokenClient));
         }
 
         @Override
@@ -611,11 +678,21 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
     }
 
-    class TokenClient implements IBinder.DeathRecipient {
+    @AllArgsConstructor
+    @Getter
+    @ToString
+    private class RecRequest {
+        @Delegate
+        IParam param;
+        TokenClient client;
+    }
 
+    private class TokenClient implements IBinder.DeathRecipient {
+
+        @Delegate
         IToken receiver;
 
-        public EventReceiverClient(IToken receiver) {
+        TokenClient(IToken receiver) {
             this.receiver = receiver;
             try {
                 receiver.asBinder().linkToDeath(this, 0);
@@ -626,7 +703,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         @Override
         public void binderDied() {
-            stop();
+            Logger.w("binderDied:%s", receiver);
+            onClientDie(this);
         }
 
         void unLinkToDeath() {

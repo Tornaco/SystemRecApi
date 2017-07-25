@@ -2,6 +2,11 @@
     <string name="app_name">Library</string>
 
     <string name="rec_bridge_resolve">Handling recording request</string>
+    <string name="rec_bridge_request_title">Recording service</string>
+    <string name="rec_bridge_request_message">Allow <b>%1$s</b> to screen recording?</string>
+    <string name="rec_bridge_request_allow">Allow</string>
+    <string name="rec_bridge_request_deny">Deny</string>
+    <string name="rec_bridge_request_remember">Allow <b>%1$s</b> to screen recording?</string>
 
     <string name="recording">Recording\u2026</string>
     <string name="recording_ready_to_share">Recording ready to share</string>

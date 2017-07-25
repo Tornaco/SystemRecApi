@@ -2,6 +2,7 @@
     package="dev.nick.library">
 
     <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:allowBackup="true"
@@ -10,7 +11,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".RecBridgeActivity"
+            android:name=".ui.RecBridgeActivity"
             android:label="@string/rec_bridge_resolve"
             android:theme="@style/AppThemeDialog" />
 
