@@ -45,7 +45,7 @@ public class RecRequestAsker {
                         callback.onDeny();
                     }
                 })
-                .setNegativeButton(R.string.rec_bridge_request_remember, new DialogInterface.OnClickListener() {
+                .setNeutralButton(R.string.rec_bridge_request_remember, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         callback.onRemember();

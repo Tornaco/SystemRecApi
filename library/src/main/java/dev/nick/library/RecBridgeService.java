@@ -300,6 +300,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                                 @Override
                                 public void onRemember() {
                                     mSettingsProvider.setAppRecAllowed(pkgName, true);
+                                    startRecBridgeActivity();
                                 }
                             });
                 }
