@@ -28,7 +28,8 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
+
+import org.newstand.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,14 +40,11 @@ import dev.nick.library.AudioSource;
 
 public class RecordingDevice extends EncoderDevice {
 
-    private static final String LOGTAG = "RecordingDevice";
     private File mFile;
-    private boolean mRecordAudio;
     private int mAudioSource;
 
-    public RecordingDevice(Context context, int width, int height, boolean recordAudio, int audioSource, int orientation, String path) {
-        super(context, width, height, orientation);
-        mRecordAudio = recordAudio;
+    public RecordingDevice(Context context, int width, int height, int audioSource, int orientation, int fr, String path) {
+        super(context, width, height, orientation, fr);
         this.mFile = new File(path);
         this.mAudioSource = audioSource;
     }
@@ -88,9 +86,9 @@ public class RecordingDevice extends EncoderDevice {
                 }
                 encode();
             } catch (Exception e) {
-                Log.e(LOGTAG, "Audio Muxer error", e);
+                Logger.e(e, "Audio Muxer error");
             } finally {
-                Log.i(LOGTAG, "AudioMuxer done");
+                Logger.i("AudioMuxer done");
                 muxWaiter.release();
             }
         }
@@ -135,7 +133,7 @@ public class RecordingDevice extends EncoderDevice {
             try {
                 codec = MediaCodec.createEncoderByType("audio/mp4a-latm");
             } catch (IOException e) {
-                Log.wtf(LOGTAG, "Can'data create encoder!", e);
+                Logger.w("Can'data create encoder!", e);
             }
             format = new MediaFormat();
             format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
@@ -152,34 +150,34 @@ public class RecordingDevice extends EncoderDevice {
             int minBufferSize = AudioRecord.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
             if (bufferSize < minBufferSize)
                 bufferSize = ((minBufferSize / 1024) + 1) * 1024 * 2;
-            Log.i(LOGTAG, "AudioRecorder init");
+            Logger.i("AudioRecorder init");
             int audioSource =
                     mAudioSource == AudioSource.MIC
                             ? MediaRecorder.AudioSource.MIC
                             : MediaRecorder.AudioSource.REMOTE_SUBMIX;
-            Log.i(LOGTAG, "Using audio source:" + audioSource);
+            Logger.i("Using audio source:" + audioSource);
             record = new AudioRecord(audioSource, 44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize);
         }
 
         @Override
         public void run() {
             try {
-                Log.i(LOGTAG, "AudioRecorder start");
+                Logger.i("AudioRecorder start");
                 record.startRecording();
                 encode();
             } catch (Exception e) {
-                Log.e(LOGTAG, "AudioRecorder error", e);
+                Logger.e(e, "AudioRecorder error");
             }
-            Log.i(LOGTAG, "AudioRecorder done");
+            Logger.i("AudioRecorder done");
             try {
                 record.stop();
             } catch (Exception e) {
-                Log.e(LOGTAG, "AudioRecorder error", e);
+                Logger.e(e, "AudioRecorder error");
             }
             try {
                 record.release();
             } catch (Exception e) {
-                Log.e(LOGTAG, "AudioRecorder error", e);
+                Logger.e(e, "AudioRecorder error");
             }
         }
 
@@ -217,7 +215,9 @@ public class RecordingDevice extends EncoderDevice {
         @Override
         public void encode() throws Exception {
             File recordingDir = mFile.getParentFile();
-            recordingDir.mkdirs();
+            if (!recordingDir.mkdirs()) {
+                throw new IOException("Cannot mkdirs " + recordingDir);
+            }
             if (!(recordingDir.exists() && recordingDir.canWrite())) {
                 throw new SecurityException("Cannot write to " + recordingDir);
             }
@@ -234,12 +234,12 @@ public class RecordingDevice extends EncoderDevice {
                 MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
                 int bufIndex = venc.dequeueOutputBuffer(info, -1);
                 if (bufIndex >= 0) {
-                    Log.i(LOGTAG, "Dequeued buffer " + info.presentationTimeUs);
+                    Logger.i("Dequeued buffer " + info.presentationTimeUs);
 
                     if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
                         // The codec config data was pulled out and fed to the muxer when we got
                         // the INFO_OUTPUT_FORMAT_CHANGED status.  Ignore it.
-                        Log.d(LOGTAG, "ignoring BUFFER_FLAG_CODEC_CONFIG");
+                        Logger.d("ignoring BUFFER_FLAG_CODEC_CONFIG");
                         info.size = 0;
                     }
 
@@ -264,11 +264,11 @@ public class RecordingDevice extends EncoderDevice {
                         throw new RuntimeException("format changed twice");
                     }
                     MediaFormat newFormat = venc.getOutputFormat();
-                    Log.d(LOGTAG, "encoder output format changed: " + newFormat);
+                    Logger.d("encoder output format changed: " + newFormat);
 
                     // now that we have the Magic Goodies, start the muxer
                     trackIndex = muxer.addTrack(newFormat);
-                    if (mRecordAudio) {
+                    if (mAudioSource != AudioSource.NOOP) {
                         audio = new AudioRecorder(this);
                         Semaphore semaphore = new Semaphore(0);
                         audioMuxer = new AudioMuxer(audio, muxer, semaphore);
@@ -276,17 +276,16 @@ public class RecordingDevice extends EncoderDevice {
                         new Thread(audio, "AudioRecorder").start();
                         audioThread = new Thread(audioMuxer, "AudioMuxer");
                         audioThread.start();
-
                         semaphore.acquire();
                     } else {
                         muxer.start();
                         muxerStarted = true;
                     }
-                    Log.i(LOGTAG, "Muxing");
+                    Logger.i("Muxing");
                 }
             }
             doneCoding = true;
-            Log.i(LOGTAG, "Done recording");
+            Logger.i("Done recording");
             if (audioThread != null)
                 audioThread.join();
             muxer.stop();
@@ -294,7 +293,7 @@ public class RecordingDevice extends EncoderDevice {
                     new String[]{mFile.getAbsolutePath()}, null,
                     new MediaScannerConnection.OnScanCompletedListener() {
                         public void onScanCompleted(String path, Uri uri) {
-                            Log.i(LOGTAG, "MediaScanner scanned recording " + path);
+                            Logger.i("MediaScanner scanned recording " + path);
                         }
                     });
         }

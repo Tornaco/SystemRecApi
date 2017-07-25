@@ -20,17 +20,24 @@ public class IParam implements Parcelable {
 
     private int audioSource;
     private int orientation;
+    private int frameRate;
     private String resolution;
     private boolean shutterSound;
     private boolean stopOnScreenOff;
+    private boolean stopOnShake;
+
+    private String path;
 
 
     protected IParam(Parcel in) {
         audioSource = in.readInt();
         orientation = in.readInt();
+        frameRate = in.readInt();
         resolution = in.readString();
         shutterSound = in.readByte() != 0;
         stopOnScreenOff = in.readByte() != 0;
+        stopOnShake = in.readByte() != 0;
+        path = in.readString();
     }
 
     public static final Creator<IParam> CREATOR = new Creator<IParam>() {
@@ -54,8 +61,11 @@ public class IParam implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeInt(audioSource);
         parcel.writeInt(orientation);
+        parcel.writeInt(frameRate);
         parcel.writeString(resolution);
         parcel.writeByte((byte) (shutterSound ? 1 : 0));
         parcel.writeByte((byte) (stopOnScreenOff ? 1 : 0));
+        parcel.writeByte((byte) (stopOnShake ? 1 : 0));
+        parcel.writeString(path);
     }
 }

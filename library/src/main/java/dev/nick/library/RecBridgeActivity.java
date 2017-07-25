@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import org.newstand.logger.Logger;
+
 import dev.nick.eventbus.EventBus;
 import lombok.experimental.var;
 
@@ -25,6 +27,7 @@ public class RecBridgeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.layout_rec_bridge);
         resolveIntent();
     }
 
@@ -68,10 +71,12 @@ public class RecBridgeActivity extends AppCompatActivity {
         projection.registerCallback(projectionCallback, null);
         RecBridgeApp app = (RecBridgeApp) getApplication();
         app.setProjection(projection);
+        Logger.d("onActivityResult:%s", projection);
         onProjectionReady();
     }
 
     private void onProjectionReady() {
         EventBus.getInstance().publishEmptyEvent(Events.PROJECTION_READY);
+        finish();
     }
 }

@@ -76,6 +76,15 @@ public abstract class ValidResolutions {
             {848, 480}
     };
 
+    public static int indexOf(String res) {
+        for (int i = 0; i < DESC.length; i++) {
+            if (DESC[i].equalsIgnoreCase(res)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Bad res:" + res);
+    }
+
     public static List<String> string() {
         List<String> out = new ArrayList<>();
         for (int[] re : $) {

@@ -11,7 +11,8 @@
 
         <activity
             android:name=".RecBridgeActivity"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+            android:label="@string/rec_bridge_resolve"
+            android:theme="@style/AppThemeDialog" />
 
     </application>
 

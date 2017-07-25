@@ -16,7 +16,6 @@
 
 package dev.nick.library.cast;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -25,7 +24,6 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.projection.MediaProjection;
-import android.os.Build;
 import android.text.TextUtils;
 import android.view.Surface;
 
@@ -46,36 +44,39 @@ import dev.nick.library.cast.safesax.ElementListener;
 import dev.nick.library.cast.safesax.Parsers;
 import dev.nick.library.cast.safesax.RootElement;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 abstract class EncoderDevice {
-
-    Context context;
+    protected Context context;
     private MediaProjection projection;
+
     private int width;
     private int height;
     private int orientation;
+    private int frameRate;
+
     private MediaCodec venc;
     private VirtualDisplay virtualDisplay;
-    // Standard resolution tables, removed values that aren'data multiples of 8
+
+    // Standard resolution tables, removed values that are not data multiples of 8
     private int validResolutions[][] = ValidResolutions.$;
 
-    EncoderDevice(Context context, int width, int height, int orientation) {
+    EncoderDevice(Context context, int width, int height, int orientation, int frameRate) {
         this.context = context;
         this.width = width;
         this.height = height;
         this.orientation = orientation;
+        this.frameRate = frameRate;
     }
 
     public void setProjection(MediaProjection projection) {
         this.projection = projection;
     }
 
-    public VirtualDisplay registerVirtualDisplay(Context context, String name, int originalWidth,
-                                                 int originalHeight, int densityDpi) {
+    public VirtualDisplay registerVirtualDisplay(String name) {
         assert virtualDisplay == null;
         Surface surface = createDisplaySurface();
         if (surface == null)
             return null;
+        Logger.i("createVirtualDisplay with name:%s, w:%s, h:%s", name, width, height);
         return projection.createVirtualDisplay(name,
                 width, height, 1,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
@@ -137,11 +138,12 @@ abstract class EncoderDevice {
             File mediaProfiles = new File("/system/etc/media_profiles.xml");
             FileInputStream fin = new FileInputStream(mediaProfiles);
             byte[] bytes = new byte[(int) mediaProfiles.length()];
+            //noinspection ResultOfMethodCallIgnored
             fin.read(bytes);
             String xml = new String(bytes);
             RootElement root = new RootElement("MediaSettings");
             Element encoder = root.requireChild("VideoEncoderCap");
-            final ArrayList<VideoEncoderCap> encoders = new ArrayList<VideoEncoderCap>();
+            final ArrayList<VideoEncoderCap> encoders = new ArrayList<>();
             encoder.setElementListener(new ElementListener() {
                 @Override
                 public void end() {
@@ -241,8 +243,6 @@ abstract class EncoderDevice {
 
         MediaFormat video = MediaFormat.createVideoFormat("video/avc", width, height);
 
-        int frameRate = 30;
-
         video.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
         video.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
         video.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
@@ -269,7 +269,7 @@ abstract class EncoderDevice {
         int maxFrameHeight;
         int maxBitRate;
 
-        public VideoEncoderCap(Attributes attributes) {
+        VideoEncoderCap(Attributes attributes) {
             maxFrameWidth = Integer.valueOf(attributes.getValue("maxFrameWidth"));
             maxFrameHeight = Integer.valueOf(attributes.getValue("maxFrameHeight"));
             maxBitRate = Integer.valueOf(attributes.getValue("maxBitRate"));
@@ -279,7 +279,7 @@ abstract class EncoderDevice {
     abstract class EncoderRunnable implements Runnable {
         MediaCodec venc;
 
-        public EncoderRunnable(MediaCodec venc) {
+        EncoderRunnable(MediaCodec venc) {
             this.venc = venc;
         }
 

@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Library</string>
 
+    <string name="rec_bridge_resolve">Handling recording request</string>
+
     <string name="recording">Recording\u2026</string>
     <string name="recording_ready_to_share">Recording ready to share</string>
     <string name="video_length">Video length: %s</string>
