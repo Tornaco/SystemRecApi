@@ -27,14 +27,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name="dev.nick.library.RecBridgeService"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="dev.nick.app.action.BINDE_REC_BRIDGE_SERVICE" />
-            </intent-filter>
-        </service>
     </application>
 
 </manifest>

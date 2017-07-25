@@ -1,10 +1,6 @@
 package dev.nick.library;
 
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,7 +18,6 @@ import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.media.projection.MediaProjection;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -40,9 +35,10 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.widget.Toast;
 
+import com.google.common.base.Preconditions;
+
 import org.newstand.logger.Logger;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +48,6 @@ import java.util.TimerTask;
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventBus;
 import dev.nick.eventbus.EventReceiver;
-import dev.nick.library.cast.MediaTools;
 import dev.nick.library.cast.RecordingDevice;
 import dev.nick.library.cast.ThreadUtil;
 import dev.nick.library.ui.RecBridgeActivity;
@@ -89,7 +84,6 @@ public class RecBridgeService extends Service implements Handler.Callback {
     private long startTime;
     private Timer timer;
 
-    private Notification.Builder mBuilder;
     private SoundPool mSoundPool;
     private int mStartSound, mStopSound;
 
@@ -217,10 +211,11 @@ public class RecBridgeService extends Service implements Handler.Callback {
         registerReceiver(mBroadcastReceiver, filter);
     }
 
-    void cleanup() {
+    synchronized void cleanup() {
         String recorderPath = null;
         if (mRecorder != null) {
             recorderPath = mRecorder.getRecordingFilePath();
+            Logger.i("recorderPath:%s", recorderPath);
             mRecorder.stop();
             mRecorder = null;
         }
@@ -229,9 +224,6 @@ public class RecBridgeService extends Service implements Handler.Callback {
             timer = null;
         }
         stopForeground(true);
-        if (recorderPath != null) {
-            sendShareNotification(recorderPath);
-        }
         if (mProjection != null)
             mProjection.stop();
     }
@@ -343,13 +335,12 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 mSoundPool.play(mStartSound, 1.0f, 1.0f, 0, 0, 1.0f);
             }
 
-            mBuilder = createNotificationBuilder();
-
             timer = new Timer();
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    updateNotification();
+                    long timeElapsed = SystemClock.elapsedRealtime() - startTime;
+                    notifyTimeChange(DateUtils.formatElapsedTime(timeElapsed / 1000));
                 }
             }, 100, 1000);
             return true;
@@ -364,15 +355,6 @@ public class RecBridgeService extends Service implements Handler.Callback {
         long bytesAvailable = stat.getBlockSizeLong() * stat.getBlockCountLong();
         long megAvailable = bytesAvailable / 1048576;
         return megAvailable >= 30;
-    }
-
-    public void updateNotification() {
-        long timeElapsed = SystemClock.elapsedRealtime() - startTime;
-        String time = getString(R.string.video_length,
-                DateUtils.formatElapsedTime(timeElapsed / 1000));
-        mBuilder.setContentText(time);
-        startForeground(1, mBuilder.build());
-        notifyTimeChange(DateUtils.formatElapsedTime(timeElapsed / 1000));
     }
 
     protected Point getNativeResolution() {
@@ -430,6 +412,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
     }
 
     private void stopCasting() {
+        Logger.d("stopCasting");
         cleanup();
 
         if (mIsCasting && mRecRequest.isShutterSound()) {
@@ -453,55 +436,10 @@ public class RecBridgeService extends Service implements Handler.Callback {
         if (ACTION_STOP_SCREENCAST.equals(intent.getAction())) {
             stop();
         }
-        if (ACTION_START_SCREENCAST.equals(intent.getAction())){
+        if (ACTION_START_SCREENCAST.equals(intent.getAction())) {
 
         }
         return START_STICKY;
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private Notification.Builder createNotificationBuilder() {
-        Notification.Builder builder = new Notification.Builder(this)
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_stat_device_access_video)
-                .setContentTitle(getString(R.string.recording));
-        Intent stopRecording = new Intent(ACTION_STOP_SCREENCAST);
-        stopRecording.setClass(this, RecBridgeService.class);
-        builder.addAction(R.drawable.ic_stop, getString(R.string.stop),
-                PendingIntent.getService(this, 0, stopRecording, PendingIntent.FLAG_UPDATE_CURRENT));
-        return builder;
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private void sendShareNotification(String recordingFilePath) {
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        // share the file
-        mBuilder = createShareNotificationBuilder(recordingFilePath);
-        notificationManager.notify(0, mBuilder.build());
-    }
-
-    private Notification.Builder createShareNotificationBuilder(String file) {
-        Intent sharingIntent = MediaTools.buildSharedIntent(this, new File(file));
-        Intent chooserIntent = Intent.createChooser(sharingIntent, null);
-        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        long timeElapsed = SystemClock.elapsedRealtime() - startTime;
-
-        Logger.d("Video complete: " + file);
-
-        Intent open = MediaTools.buildOpenIntent(this, new File(file));
-        PendingIntent contentIntent =
-                PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_CANCEL_CURRENT);
-
-        return new Notification.Builder(this)
-                .setWhen(System.currentTimeMillis())
-                .setSmallIcon(R.drawable.ic_stat_device_access_video)
-                .setContentTitle(getString(R.string.recording_ready_to_share))
-                .setContentText(getString(R.string.video_length,
-                        DateUtils.formatElapsedTime(timeElapsed / 1000)))
-                .addAction(R.drawable.ic_share, getString(R.string.share),
-                        PendingIntent.getActivity(this, 0, chooserIntent, PendingIntent.FLAG_CANCEL_CURRENT))
-                .setContentIntent(contentIntent);
     }
 
     private void notifyTimeChange(final String time) {
@@ -581,30 +519,21 @@ public class RecBridgeService extends Service implements Handler.Callback {
         synchronized (mWatchers) {
             if (!mWatchers.contains(w)) {
                 mWatchers.add(w);
-                notifySticky(w);
             }
         }
+        notifySticky(w);
     }
 
     void notifySticky(final IWatcher watcher) {
-        ThreadUtil.getMainThreadHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (mIsCasting) {
-                    try {
-                        watcher.onStart();
-                    } catch (RemoteException ignored) {
-
-                    }
-                } else {
-                    try {
-                        watcher.onStop();
-                    } catch (RemoteException ignored) {
-
-                    }
-                }
-            }
-        });
+        Logger.i("notifySticky:%s", watcher);
+        try {
+            if (isRecording())
+                watcher.onStart();
+            else
+                watcher.onStop();
+        } catch (Throwable e) {
+            Logger.e(e, "Error call watcher");
+        }
     }
 
     public boolean checkSelfPermission() {
@@ -663,12 +592,12 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         @Override
         public void watch(IWatcher w) throws RemoteException {
-            RecBridgeService.this.watch(w);
+            RecBridgeService.this.watch(Preconditions.checkNotNull(w));
         }
 
         @Override
         public void unWatch(IWatcher w) throws RemoteException {
-            RecBridgeService.this.unWatch(w);
+            RecBridgeService.this.unWatch(Preconditions.checkNotNull(w));
         }
 
         @Override
