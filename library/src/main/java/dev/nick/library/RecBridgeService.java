@@ -154,6 +154,11 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
     };
 
+    private void onStartWithoutProjection() {
+        Logger.i("onStartWithoutProjection");
+        startInternal();
+    }
+
     private void onProjectionReady() {
         RecBridgeApp app = (RecBridgeApp) getApplication();
         MediaProjection projection = app.getProjection();
@@ -308,7 +313,11 @@ public class RecBridgeService extends Service implements Handler.Callback {
             return;
         }
 
-        startRecBridgeActivity();
+        if (recRequest.isUseMediaProjection()) {
+            startRecBridgeActivity();
+        } else {
+            onStartWithoutProjection();
+        }
     }
 
     private void startRecBridgeActivity() {
@@ -321,21 +330,12 @@ public class RecBridgeService extends Service implements Handler.Callback {
     boolean startInternal() {
         Logger.d("startInternal");
 
-        if (mProjection == null) {
-            ThreadUtil.getMainThreadHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getApplicationContext(), R.string.not_projection, Toast.LENGTH_LONG).show();
-                }
-            });
-            return false;
-        }
-
         if (!hasAvailableSpace()) {
             ThreadUtil.getMainThreadHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getApplicationContext(), R.string.not_enough_storage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),
+                            R.string.not_enough_storage, Toast.LENGTH_LONG).show();
                 }
             });
             return false;
@@ -421,8 +421,12 @@ public class RecBridgeService extends Service implements Handler.Callback {
         Point size = getNativeResolution();
         mRecorder = new RecordingDevice(this, size.x, size.y,
                 mRecRequest.getAudioSource(), mRecRequest.getOrientation(), mRecRequest.getFrameRate(), mRecRequest.getPath());
-        mRecorder.setProjection(mProjection);
-        VirtualDisplay vd = mRecorder.registerVirtualDisplay(SCREENCASTER_NAME);
+        boolean useProjection = mRecRequest.isUseMediaProjection();
+        VirtualDisplay vd =
+                useProjection ?
+                        mRecorder.registerVirtualDisplay(mProjection, SCREENCASTER_NAME)
+                        : mRecorder.registerVirtualDisplay(this, SCREENCASTER_NAME);
+        Logger.i("VirtualDisplay, vd:%s", vd);
         if (vd == null) {
             cleanup();
         }
@@ -554,7 +558,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
     }
 
     public boolean checkSelfPermission() {
-        return ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAPTURE_AUDIO_OUTPUT)
+        return ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.CAPTURE_AUDIO_OUTPUT)
                 == PackageManager.PERMISSION_GRANTED;
     }
 

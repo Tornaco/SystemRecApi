@@ -46,7 +46,6 @@ import dev.nick.library.cast.safesax.RootElement;
 
 abstract class EncoderDevice {
     protected Context context;
-    private MediaProjection projection;
 
     private int width;
     private int height;
@@ -67,11 +66,7 @@ abstract class EncoderDevice {
         this.frameRate = frameRate;
     }
 
-    public void setProjection(MediaProjection projection) {
-        this.projection = projection;
-    }
-
-    public VirtualDisplay registerVirtualDisplay(String name) {
+    public VirtualDisplay registerVirtualDisplay(MediaProjection projection, String name) {
         assert virtualDisplay == null;
         Surface surface = createDisplaySurface();
         if (surface == null)
@@ -81,6 +76,17 @@ abstract class EncoderDevice {
                 width, height, 1,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 surface, null /*Callbacks*/, null /*Handler*/);
+    }
+
+    public VirtualDisplay registerVirtualDisplay(Context context, String name) {
+        assert virtualDisplay == null;
+        Logger.i("createVirtualDisplay with name:%s, w:%s, h:%s", name, width, height);
+        DisplayManager dm = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
+        Surface surface = createDisplaySurface();
+        if (surface == null)
+            return null;
+        return virtualDisplay = dm.createVirtualDisplay(name, width, height, 1,
+                surface, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC | DisplayManager.VIRTUAL_DISPLAY_FLAG_SECURE);
     }
 
     public void stop() {
