@@ -1,4 +1,4 @@
-package dev.nick.library.ui;
+package dev.nick.systemrecapi.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;

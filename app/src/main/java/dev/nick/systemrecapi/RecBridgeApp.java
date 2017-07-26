@@ -1,4 +1,4 @@
-package dev.nick.library;
+package dev.nick.systemrecapi;
 
 import android.app.Application;
 import android.media.projection.MediaProjection;

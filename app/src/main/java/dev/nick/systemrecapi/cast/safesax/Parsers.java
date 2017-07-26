@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast.safesax;
+package dev.nick.systemrecapi.cast.safesax;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;

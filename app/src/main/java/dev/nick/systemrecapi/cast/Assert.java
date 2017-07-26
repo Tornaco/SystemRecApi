@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.nick.library.cast;
+package dev.nick.systemrecapi.cast;
 
 import android.os.Looper;
 import android.util.Log;

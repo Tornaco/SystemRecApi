@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast.safesax;
+package dev.nick.systemrecapi.cast.safesax;
 
 /**
- * Listens for the beginning and ending of elements.
+ * Listens for the end of text elements.
  */
-public interface ElementListener extends StartElementListener,
-    EndElementListener {
+public interface EndTextElementListener {
 
+  /**
+   * Invoked at the end of a text element with the body of the element.
+   *
+   * @param body of the element
+   */
+  void end(String body);
 }

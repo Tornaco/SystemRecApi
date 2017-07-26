@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast.safesax;
+package dev.nick.systemrecapi.cast.safesax;
+
+import org.xml.sax.Attributes;
 
 /**
- * Listens for the beginning and ending of text elements.
+ * Listens for the beginning of elements.
  */
-public interface TextElementListener extends StartElementListener,
-EndTextElementListener {
+public interface StartElementListener {
 
+  /**
+   * Invoked at the beginning of an element.
+   *
+   * @param attributes from the element
+   */
+  void start(Attributes attributes);
 }

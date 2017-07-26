@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast.safesax;
+package dev.nick.systemrecapi.cast.safesax;
+
+import org.xml.sax.Locator;
+import org.xml.sax.SAXParseException;
 
 /**
- * Listens for the end of text elements.
+ * An XML parse exception which includes the line number in the message.
  */
-public interface EndTextElementListener {
+class BadXmlException extends SAXParseException {
 
-  /**
-   * Invoked at the end of a text element with the body of the element.
-   *
-   * @param body of the element
-   */
-  void end(String body);
+  public BadXmlException(String message, Locator locator) {
+    super(message, locator);
+  }
+
+  public String getMessage() {
+    return "Line " + getLineNumber() + ": " + super.getMessage();
+  }
 }

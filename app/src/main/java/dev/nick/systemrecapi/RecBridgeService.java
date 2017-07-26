@@ -1,4 +1,4 @@
-package dev.nick.library;
+package dev.nick.systemrecapi;
 
 import android.Manifest;
 import android.app.Service;
@@ -48,11 +48,18 @@ import java.util.TimerTask;
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventBus;
 import dev.nick.eventbus.EventReceiver;
-import dev.nick.library.cast.RecordingDevice;
-import dev.nick.library.cast.ThreadUtil;
+import dev.nick.library.BuildConfig;
+import dev.nick.library.IParam;
+import dev.nick.library.IRecBridge;
+import dev.nick.library.IToken;
+import dev.nick.library.IWatcher;
+import dev.nick.library.Orientations;
+import dev.nick.library.ValidResolutions;
 import dev.nick.library.common.Holder;
-import dev.nick.library.ui.RecBridgeActivity;
-import dev.nick.library.ui.RecRequestAsker;
+import dev.nick.systemrecapi.cast.RecordingDevice;
+import dev.nick.systemrecapi.cast.ThreadUtil;
+import dev.nick.systemrecapi.ui.RecBridgeActivity;
+import dev.nick.systemrecapi.ui.RecRequestAsker;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -206,8 +213,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
                         .build())
                 .build();
 
-        mStopSound = mSoundPool.load(this, R.raw.video_stop, 1);
-        mStartSound = mSoundPool.load(this, R.raw.video_record, 1);
+        mStopSound = mSoundPool.load(this, dev.nick.library.R.raw.video_stop, 1);
+        mStartSound = mSoundPool.load(this, dev.nick.library.R.raw.video_record, 1);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_USER_BACKGROUND);
@@ -335,7 +342,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 @Override
                 public void run() {
                     Toast.makeText(getApplicationContext(),
-                            R.string.not_enough_storage, Toast.LENGTH_LONG).show();
+                            dev.nick.library.R.string.not_enough_storage, Toast.LENGTH_LONG).show();
                 }
             });
             return false;
@@ -588,7 +595,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         @Override
         public String getVersionName() throws RemoteException {
-            return BuildConfig.VERSION_NAME;
+            return dev.nick.library.BuildConfig.VERSION_NAME;
         }
 
         @Override

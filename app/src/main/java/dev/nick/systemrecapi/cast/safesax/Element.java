@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast.safesax;
+package dev.nick.systemrecapi.cast.safesax;
 
 import org.xml.sax.Locator;
 import org.xml.sax.SAXParseException;
@@ -37,7 +37,7 @@ public class Element {
 
   ArrayList<Element> requiredChilden;
   boolean visited;
-  
+
   StartElementListener startElementListener;
   EndElementListener endElementListener;
   EndTextElementListener endTextElementListener;

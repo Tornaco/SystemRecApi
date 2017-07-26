@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast;
+package dev.nick.systemrecapi.cast;
 
 import android.content.Context;
 import android.hardware.display.DisplayManager;
@@ -39,10 +39,10 @@ import java.util.ArrayList;
 import dev.nick.library.Orientations;
 import dev.nick.library.R;
 import dev.nick.library.ValidResolutions;
-import dev.nick.library.cast.safesax.Element;
-import dev.nick.library.cast.safesax.ElementListener;
-import dev.nick.library.cast.safesax.Parsers;
-import dev.nick.library.cast.safesax.RootElement;
+import dev.nick.systemrecapi.cast.safesax.Element;
+import dev.nick.systemrecapi.cast.safesax.ElementListener;
+import dev.nick.systemrecapi.cast.safesax.Parsers;
+import dev.nick.systemrecapi.cast.safesax.RootElement;
 
 abstract class EncoderDevice {
     protected Context context;

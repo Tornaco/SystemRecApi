@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.nick.library.cast;
+package dev.nick.systemrecapi.cast;
 
 import android.content.Context;
 import android.media.AudioFormat;

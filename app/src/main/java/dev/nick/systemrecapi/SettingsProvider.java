@@ -1,4 +1,4 @@
-package dev.nick.library;
+package dev.nick.systemrecapi;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,7 +13,7 @@ import lombok.Getter;
  * Licensed with Apache.
  */
 @AllArgsConstructor
-public class SettingsProvider extends Observable {
+class SettingsProvider extends Observable {
 
     private static final String PREF_NAME = "rec_bridge_settings";
 

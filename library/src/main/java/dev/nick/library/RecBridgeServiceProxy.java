@@ -6,14 +6,12 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.Keep;
 
-import dev.nick.library.cast.Assert;
 import dev.nick.library.common.Holder;
 
 /**
  * Created by Tornaco on 2017/7/24.
  * Licensed with Apache.
  */
-@Assert.DoesNotRunOnMainThread
 @Keep
 public class RecBridgeServiceProxy extends ServiceProxy implements IRecBridge {
 
