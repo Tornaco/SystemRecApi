@@ -1,0 +1,29 @@
+language: android
+
+jdk: oraclejdk8
+# Turn off caching to avoid any caching problems
+cache: false
+sudo: false
+
+android:
+  components:
+  - build-tools-25.0.2
+  - android-25
+  - android-24
+  - extra-android-m2repository
+  - extra-android-support
+
+
+script:
+ - "./gradlew assembleDebug"
+
+before_script:
+ - mkdir -p "$ANDROID_HOME/licenses"
+ - cp ./android-sdk-license "$ANDROID_HOME/licenses/"
+
+notifications:
+  email:
+    recipients:
+      - tornaco@163.com
+    on_success: always # default: change
+    on_failure: always # default: always
