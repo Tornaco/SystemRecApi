@@ -342,7 +342,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 @Override
                 public void run() {
                     Toast.makeText(getApplicationContext(),
-                           R.string.not_enough_storage, Toast.LENGTH_LONG).show();
+                            R.string.not_enough_storage, Toast.LENGTH_LONG).show();
                 }
             });
             return false;
@@ -648,26 +648,30 @@ public class RecBridgeService extends Service implements Handler.Callback {
     private class TokenClient implements IBinder.DeathRecipient {
 
         @Delegate
-        IToken receiver;
+        IToken token;
 
-        TokenClient(IToken receiver) {
-            this.receiver = receiver;
-            Logger.i("IToken.Binder:%s", receiver.asBinder());
+        TokenClient(IToken token) {
+            this.token = token;
+            Logger.d("IToken.Binder:%s", token.asBinder());
             try {
-                receiver.asBinder().linkToDeath(this, 0);
-            } catch (RemoteException ignored) {
-
+                token.asBinder().linkToDeath(this, 0);
+            } catch (Throwable e) {
+                Logger.e(e, "Fail link to death");
             }
         }
 
         @Override
         public void binderDied() {
-            Logger.w("binderDied:%s", receiver);
+            Logger.w("binderDied:%s", token);
             onClientDie(this);
         }
 
         void unLinkToDeath() {
-            receiver.asBinder().unlinkToDeath(this, 0);
+            try {
+                token.asBinder().unlinkToDeath(this, 0);
+            } catch (Throwable e) {
+                Logger.e(e, "Fail unlink to death");
+            }
         }
     }
 

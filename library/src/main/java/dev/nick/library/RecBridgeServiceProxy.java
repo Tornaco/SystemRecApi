@@ -21,7 +21,7 @@ public class RecBridgeServiceProxy extends ServiceProxy implements IRecBridge {
 
     public static Intent getIntent() {
         Intent intent = new Intent();
-        intent.setClassName("dev.nick.systemrecapi", "dev.nick.library.RecBridgeService");
+        intent.setClassName("dev.nick.systemrecapi", "dev.nick.systemrecapi.RecBridgeService");
         return intent;
     }
 
