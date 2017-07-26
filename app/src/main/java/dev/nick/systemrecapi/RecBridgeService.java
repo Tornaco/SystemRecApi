@@ -652,6 +652,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         TokenClient(IToken receiver) {
             this.receiver = receiver;
+            Logger.i("IToken.Binder:%s", receiver.asBinder());
             try {
                 receiver.asBinder().linkToDeath(this, 0);
             } catch (RemoteException ignored) {
