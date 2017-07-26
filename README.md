@@ -4,7 +4,7 @@
 [![](https://jitpack.io/v/Tornaco/SystemRecApi.svg)](https://jitpack.io/#Tornaco/SystemRecApi)
 
 ### Build status in travis
-
+[![Build Status](https://travis-ci.org/Tornaco/SystemRecApi.svg?branch=master)](https://travis-ci.org/Tornaco/SystemRecApi)
 
 ### Usage
 
