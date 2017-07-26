@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.support.annotation.Keep;
 
 import dev.nick.library.common.Holder;
 
@@ -12,7 +11,6 @@ import dev.nick.library.common.Holder;
  * Created by Tornaco on 2017/7/24.
  * Licensed with Apache.
  */
-@Keep
 public class RecBridgeServiceProxy extends ServiceProxy implements IRecBridge {
 
     private IRecBridge bridge;

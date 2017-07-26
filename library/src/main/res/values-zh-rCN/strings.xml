@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="rec_bridge_resolve">""</string>
-    <string name="rec_bridge_request_title">录屏管理</string>
-    <string name="rec_bridge_request_message">要允许 <b>%1$s</b> 录制屏幕内容以及设备声音吗？</string>
-    <string name="rec_bridge_request_allow">允许</string>
-    <string name="rec_bridge_request_deny">拒绝</string>
-    <string name="rec_bridge_request_remember">一直允许</string>
-
-    <string name="insufficient_storage">设备空间不足</string>
-
-    <string name="not_enough_storage">设备空间不足</string>
-    <string name="not_projection">缺少媒体录制权限</string>
 
 </resources>

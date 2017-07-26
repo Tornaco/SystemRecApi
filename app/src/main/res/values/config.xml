@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- maximum encoding size. leave -1 for unrestricted (display size) -->
+    <!-- Use the _small_ side. IOW, for 720p (1280x720) use "720" -->
+    <integer name="config_maxDimension" translatable="false">-1</integer>
+</resources>
