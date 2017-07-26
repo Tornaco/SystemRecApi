@@ -7,7 +7,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.view.WindowManager;
 
-import dev.nick.library.R;
+import dev.nick.systemrecapi.R;
+
 
 /**
  * Created by Tornaco on 2017/7/25.

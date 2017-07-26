@@ -342,7 +342,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 @Override
                 public void run() {
                     Toast.makeText(getApplicationContext(),
-                            dev.nick.library.R.string.not_enough_storage, Toast.LENGTH_LONG).show();
+                           R.string.not_enough_storage, Toast.LENGTH_LONG).show();
                 }
             });
             return false;
