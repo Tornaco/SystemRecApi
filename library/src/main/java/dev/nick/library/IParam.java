@@ -21,7 +21,9 @@ public class IParam implements Parcelable {
     private int audioSource;
     private int orientation;
     private int frameRate;
+
     private String resolution;
+
     private boolean shutterSound;
     private boolean stopOnScreenOff;
     private boolean stopOnShake;

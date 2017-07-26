@@ -296,7 +296,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                             new RecRequestAsker.Callback() {
                                 @Override
                                 public void onAllow() {
-                                    startRecBridgeActivity();
+                                    invokeRequest();
                                 }
 
                                 @Override
@@ -312,7 +312,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                                 @Override
                                 public void onRemember() {
                                     mSettingsProvider.setAppRecAllowed(pkgName, true);
-                                    startRecBridgeActivity();
+                                    invokeRequest();
                                 }
                             });
                 }
@@ -320,7 +320,14 @@ public class RecBridgeService extends Service implements Handler.Callback {
             return;
         }
 
-        if (recRequest.isUseMediaProjection()) {
+       invokeRequest();
+    }
+
+    private void invokeRequest() {
+        boolean useProjection = mRecRequest.isUseMediaProjection();
+        Logger.d("useProjection? %s", useProjection);
+
+        if (useProjection) {
             startRecBridgeActivity();
         } else {
             onStartWithoutProjection();
@@ -328,6 +335,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
     }
 
     private void startRecBridgeActivity() {
+        Logger.i("startRecBridgeActivity");
         Intent intent = new Intent(this, RecBridgeActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(RecBridgeActivity.ACTION_START_REC);
