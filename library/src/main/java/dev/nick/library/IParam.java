@@ -28,6 +28,7 @@ public class IParam implements Parcelable {
     private boolean stopOnScreenOff;
     private boolean stopOnShake;
     private boolean useMediaProjection;
+    private boolean showNotification;
 
     private String path;
 
@@ -41,6 +42,7 @@ public class IParam implements Parcelable {
         stopOnScreenOff = in.readByte() != 0;
         stopOnShake = in.readByte() != 0;
         useMediaProjection = in.readByte() != 0;
+        showNotification = in.readByte() != 0;
         path = in.readString();
     }
 
@@ -71,6 +73,7 @@ public class IParam implements Parcelable {
         parcel.writeByte((byte) (stopOnScreenOff ? 1 : 0));
         parcel.writeByte((byte) (stopOnShake ? 1 : 0));
         parcel.writeByte((byte) (useMediaProjection ? 1 : 0));
+        parcel.writeByte((byte) (showNotification ? 1 : 0));
         parcel.writeString(path);
     }
 }
