@@ -1,6 +1,9 @@
 package dev.nick.systemrecapi;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -17,7 +20,9 @@ import android.hardware.display.VirtualDisplay;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.media.projection.MediaProjection;
+import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,6 +34,7 @@ import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
@@ -39,6 +45,7 @@ import com.google.common.base.Preconditions;
 
 import org.newstand.logger.Logger;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +55,6 @@ import java.util.TimerTask;
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventBus;
 import dev.nick.eventbus.EventReceiver;
-import dev.nick.library.BuildConfig;
 import dev.nick.library.IParam;
 import dev.nick.library.IRecBridge;
 import dev.nick.library.IToken;
@@ -91,6 +97,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
     private long startTime;
     private Timer timer;
+    private Notification.Builder mBuilder;
 
     private SoundPool mSoundPool;
     private int mStartSound, mStopSound;
@@ -236,9 +243,16 @@ public class RecBridgeService extends Service implements Handler.Callback {
             timer.cancel();
             timer = null;
         }
+
         stopForeground(true);
-        if (mProjection != null)
+
+        if (recorderPath != null && mRecRequest.isShowNotification()) {
+            sendShareNotification(recorderPath);
+        }
+
+        if (mProjection != null) {
             mProjection.stop();
+        }
     }
 
     @Override
@@ -320,7 +334,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
             return;
         }
 
-       invokeRequest();
+        invokeRequest();
     }
 
     private void invokeRequest() {
@@ -367,12 +381,14 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 mSoundPool.play(mStartSound, 1.0f, 1.0f, 0, 0, 1.0f);
             }
 
+            mBuilder = createNotificationBuilder();
+
             timer = new Timer();
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    long timeElapsed = SystemClock.elapsedRealtime() - startTime;
-                    notifyTimeChange(DateUtils.formatElapsedTime(timeElapsed / 1000));
+                    onElapsedTimeChanged();
+
                 }
             }, 100, 1000);
             return true;
@@ -597,6 +613,96 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 return true;
         }
         return false;
+    }
+
+    public void onElapsedTimeChanged() {
+        long timeElapsed = SystemClock.elapsedRealtime() - startTime;
+        String timeStr = DateUtils.formatElapsedTime(timeElapsed / 1000);
+        String time = getString(R.string.video_length, timeStr);
+        mBuilder.setContentText(time);
+        if (mRecRequest.isShowNotification()) {
+            startForeground(1, mBuilder.build());
+        }
+
+        notifyTimeChange(timeStr);
+    }
+
+    private Notification.Builder createNotificationBuilder() {
+        Notification.Builder builder = new Notification.Builder(this)
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_stat_device_access_video)
+                .setContentTitle(getString(R.string.recording));
+        Intent stopRecording = new Intent(ACTION_STOP_SCREENCAST);
+        stopRecording.setClass(this, RecBridgeService.class);
+        builder.addAction(R.drawable.ic_stop, getString(R.string.stop),
+                PendingIntent.getService(this, 0, stopRecording, PendingIntent.FLAG_UPDATE_CURRENT));
+        return builder;
+    }
+
+    private void sendShareNotification(String recordingFilePath) {
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mBuilder = createShareNotificationBuilder(recordingFilePath);
+        notificationManager.notify(0, mBuilder.build());
+    }
+
+    private Notification.Builder createShareNotificationBuilder(String file) {
+        Intent sharingIntent = buildSharedIntent(new File(file));
+        Intent chooserIntent = Intent.createChooser(sharingIntent, null);
+        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        long timeElapsed = SystemClock.elapsedRealtime() - startTime;
+
+        Intent open = buildOpenIntent(this, new File(file));
+        PendingIntent contentIntent =
+                PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        return new Notification.Builder(this)
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.drawable.ic_stat_device_access_video)
+                .setContentTitle(getString(R.string.recording_ready_to_share))
+                .setContentText(getString(R.string.video_length,
+                        DateUtils.formatElapsedTime(timeElapsed / 1000)))
+                .addAction(R.drawable.ic_share, getString(R.string.share),
+                        PendingIntent.getActivity(this, 0, chooserIntent, PendingIntent.FLAG_CANCEL_CURRENT))
+                .setContentIntent(contentIntent);
+    }
+
+    public static Intent buildSharedIntent(File imageFile) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType("video/mp4");
+            sharingIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + imageFile.getAbsolutePath()));
+            sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            sharingIntent.putExtra(Intent.EXTRA_SUBJECT, imageFile.getName());
+            Intent chooserIntent = Intent.createChooser(sharingIntent, null);
+            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            return chooserIntent;
+        } else {
+            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType("video/mp4");
+            Uri uri = Uri.parse("file://" + imageFile.getAbsolutePath());
+            sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            sharingIntent.putExtra(Intent.EXTRA_SUBJECT, imageFile.getName());
+            return sharingIntent;
+
+        }
+    }
+
+    public static Intent buildOpenIntent(Context context, File imageFile) {
+
+        Intent open = new Intent(Intent.ACTION_VIEW);
+        Uri contentUri;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            open.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            contentUri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", imageFile);
+
+        } else {
+            contentUri = Uri.parse("file://" + imageFile.getAbsolutePath());
+        }
+        open.setDataAndType(contentUri, "video/mp4");
+        open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return open;
     }
 
     private class RecBridgeBinder extends IRecBridge.Stub {

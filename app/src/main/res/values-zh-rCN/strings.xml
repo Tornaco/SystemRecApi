@@ -14,4 +14,13 @@
     <string name="not_enough_storage">设备空间不足</string>
     <string name="not_projection">缺少媒体录制权限</string>
 
+    <string name="share">分享</string>
+    <string name="stop">停止</string>
+
+    <string name="show_touches">显示触摸操作</string>
+    <string name="hide_touches">隐藏触摸</string>
+    <string name="recording">正在录制\u2026</string>
+    <string name="recording_ready_to_share">录制内容已准备好共享</string>
+    <string name="video_length">视频长度: %s</string>
+
 </resources>
