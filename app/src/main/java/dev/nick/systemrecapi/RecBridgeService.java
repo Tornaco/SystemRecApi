@@ -310,7 +310,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                             new RecRequestAsker.Callback() {
                                 @Override
                                 public void onAllow() {
-                                    invokeRequest();
+                                    handleRequest();
                                 }
 
                                 @Override
@@ -326,7 +326,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                                 @Override
                                 public void onRemember() {
                                     mSettingsProvider.setAppRecAllowed(pkgName, true);
-                                    invokeRequest();
+                                    handleRequest();
                                 }
                             });
                 }
@@ -334,10 +334,10 @@ public class RecBridgeService extends Service implements Handler.Callback {
             return;
         }
 
-        invokeRequest();
+        handleRequest();
     }
 
-    private void invokeRequest() {
+    private void handleRequest() {
         boolean useProjection = mRecRequest.isUseMediaProjection();
         Logger.d("useProjection? %s", useProjection);
 
