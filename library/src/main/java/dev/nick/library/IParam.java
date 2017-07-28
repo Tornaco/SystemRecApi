@@ -29,6 +29,7 @@ public class IParam implements Parcelable {
     private boolean stopOnShake;
     private boolean useMediaProjection;
     private boolean showNotification;
+    private boolean showTouch;
 
     private String path;
 
