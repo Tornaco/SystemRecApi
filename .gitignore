@@ -8,3 +8,6 @@
 /captures
 .externalNativeBuild
 *.apk
+
+keys/evandroid.jks
+gradle.properties

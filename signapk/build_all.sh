@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 echo "Building app."
-./gradlew app:assembleDebug
+./gradlew app:assembleRelease
