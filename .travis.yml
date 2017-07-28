@@ -33,3 +33,5 @@ deploy:
     - "signapk/app-release.apk"
   on:
     repo: Tornaco/SystemRecApi
+    tags: true
+    all_branches: true
