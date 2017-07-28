@@ -41,7 +41,10 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.widget.Toast;
 
+import com.chrisplus.rootmanager.RootManager;
+import com.chrisplus.rootmanager.container.Result;
 import com.google.common.base.Preconditions;
+import com.nick.scalpel.core.opt.SharedExecutor;
 
 import org.newstand.logger.Logger;
 
@@ -373,6 +376,9 @@ public class RecBridgeService extends Service implements Handler.Callback {
         try {
             mIsCasting = true;
             notifyCasting();
+
+            updateShowTouchSettings(mRecRequest.isShowTouch());
+
             startTime = SystemClock.elapsedRealtime();
 
             registerScreenCaster();
@@ -625,6 +631,19 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
 
         notifyTimeChange(timeStr);
+    }
+
+    private void updateShowTouchSettings(boolean show) {
+        final String command = String.format("settings put %s %s %s",
+                "system", "show_touches", show ? "1" : "0");
+        SharedExecutor.get().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (RootManager.getInstance().obtainPermission()) {
+                    Result result = RootManager.getInstance().runCommand(command);
+                }
+            }
+        });
     }
 
     private Notification.Builder createNotificationBuilder() {

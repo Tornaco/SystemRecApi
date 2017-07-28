@@ -78,7 +78,7 @@ public abstract class ValidResolutions {
 
     public static int indexOf(String res) {
         for (int i = 0; i < DESC.length; i++) {
-            if (DESC[i].equalsIgnoreCase(res)) {
+            if (DESC[i].equalsIgnoreCase(res.trim())) {
                 return i;
             }
         }

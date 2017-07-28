@@ -13,7 +13,7 @@ public enum BridgeManager {
 
     Instance;
 
-    static final String PKG_NAME = "dev.nick.systemrecapi";
+    public static final String PKG_NAME = "dev.nick.systemrecapi";
 
     public static BridgeManager getInstance() {
         return Instance;
@@ -33,7 +33,9 @@ public enum BridgeManager {
         try {
             var packageInfo = context.getPackageManager().getPackageInfo(
                     PKG_NAME, 0);
-            return packageInfo != null && packageInfo.sharedUserId.equals("android.uid.system");
+            return packageInfo != null
+                    && packageInfo.sharedUserId != null
+                    && packageInfo.sharedUserId.equals("android.uid.system");
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }

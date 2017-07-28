@@ -12,7 +12,9 @@ import org.newstand.logger.Logger;
 
 import dev.nick.eventbus.EventBus;
 import dev.nick.systemrecapi.Events;
+import dev.nick.systemrecapi.R;
 import dev.nick.systemrecapi.RecBridgeApp;
+import dev.nick.systemrecapi.cast.ThreadUtil;
 import lombok.experimental.var;
 
 /**
@@ -24,13 +26,20 @@ public class RecBridgeActivity extends AppCompatActivity {
 
     private static final int PERMISSION_CODE = 1;
 
+    private static final long REQUEST_HANDLE_DELAY = 1000;
+
     public static final String ACTION_START_REC = "nick.action.start";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle(null);
-        resolveIntent();
+        setContentView(R.layout.layout_rec_bridge);
+        ThreadUtil.getMainThreadHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                resolveIntent();
+            }
+        }, REQUEST_HANDLE_DELAY);
     }
 
     private void resolveIntent() {
