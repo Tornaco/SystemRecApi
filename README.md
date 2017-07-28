@@ -3,12 +3,28 @@
 ### Use in gradle
 [![](https://jitpack.io/v/Tornaco/SystemRecApi.svg)](https://jitpack.io/#Tornaco/SystemRecApi)
 
-### Build status in travis
+1. Add it in your root build.gradle at the end of repositories:
+```
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+```
+2. Add the dependency
+```
+dependencies {
+	        compile 'com.github.Tornaco:SystemRecApi:v1.3'
+	}
+```
+
+### Build in travis
 [![Build Status](https://travis-ci.org/Tornaco/SystemRecApi.svg?branch=master)](https://travis-ci.org/Tornaco/SystemRecApi)
 
 ### Usage
 
-## All op can be achieved by RecBridgeServiceProxy
+**All op can be achieved by ```RecBridgeServiceProxy```
 
 1. How to get an instance of proxy.
 ```
