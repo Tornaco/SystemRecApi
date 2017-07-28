@@ -27,9 +27,7 @@ deploy:
   provider: releases
   api_key:
     secure: eUFUexMZ79sp3uq4g/TcCnxEaKG5xmCS+jTG9VQe0uTGaMl54w8pKG3IijX/wIY0DaNqJZuEpSRDSLoj2LP6YpeJvK4g8MykM1getCLth5RjCldm1mRmwhpE7tBxpwe/cVP6aQdhAZaT5lGTQ5O9an2HNYNbuQ7ZeGCPz2KII8QSr4+2rAZUafeb3yzDNCI64p8niNuEGyEdrEOmNLJfcN819r4zkOE67d3KrLf5MY9HBKNL389Iq6syBKYkCR2FE4G/v34I4P+zdNVNXEtDc6FoYIzRGUFrcUI+MkbS5MbwVCefZS5qUGbZLI+5NdbYQkJwWrnW8BD3WialX3/O/h7/PvhtfMFLvZU9AC9r7TTnXeRKrM+zRufAU2iRuhOPKMlL5xVSI3CGfQ4htS1vciYpSJXpg0rTY6jj/kCl7S2sPqDGKgz4OfLYK4ln3guDKSCIHy2IPyd6fKiVyn5WaWoNfVovjCHizZ9p3IXkwbLD+eKz1XLGutVqwCDyk59XfO6LldtbufGBl9OuFpciL9acs/tZbqmXppyQli55JVPQ2AKZFZtX7yll58VnW/iHsDGNaQa8clFlZF7J4chuoaS2VlQ1xbJZtbET4BMWwI7v2QPjXrGIN8grQrM9UZZnNJ7d2JcAIB4Ve2G8Xw503pJWejhY+mLovKwyQ2dBxcE=
-  file: 
-    - "./signapk/app-release-platform.apk"
-    - "./signapk/app-release.apk"
+  file: app/build/outputs/apk/app-release.apk
   on:
     repo: Tornaco/SystemRecApi
     tags: true
