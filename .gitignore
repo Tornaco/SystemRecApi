@@ -9,5 +9,6 @@
 .externalNativeBuild
 *.apk
 
+keys/*
 keys/evandroid.jks
 gradle.properties
