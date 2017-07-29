@@ -11,6 +11,8 @@ android:
   - extra-android-support
 script:
 - "./build_sign.sh"
+- "./signapk/patch.sh"
+- "./build.sh"
 before_script:
 - mkdir -p "$ANDROID_HOME/licenses"
 - cp ./android-sdk-license "$ANDROID_HOME/licenses/"
