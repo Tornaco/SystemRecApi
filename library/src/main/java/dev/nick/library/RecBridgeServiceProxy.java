@@ -35,6 +35,7 @@ public class RecBridgeServiceProxy extends ServiceProxy implements IRecBridge {
     }
 
     @Override
+    @Deprecated
     public String getVersionName() throws RemoteException {
         final Holder<String> res = new Holder<>();
         setTask(new ProxyTask() {
@@ -48,6 +49,7 @@ public class RecBridgeServiceProxy extends ServiceProxy implements IRecBridge {
     }
 
     @Override
+    @Deprecated
     public int getVersionCode() throws RemoteException {
         final Holder<Integer> res = new Holder<>();
         setTask(new ProxyTask() {

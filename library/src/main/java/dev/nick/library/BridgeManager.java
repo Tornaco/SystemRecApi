@@ -45,7 +45,7 @@ public enum BridgeManager {
         try {
             var packageInfo = context.getPackageManager().getPackageInfo(
                     PKG_NAME, 0);
-            return packageInfo != null ? packageInfo.packageName : null;
+            return packageInfo != null ? packageInfo.versionName : null;
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }

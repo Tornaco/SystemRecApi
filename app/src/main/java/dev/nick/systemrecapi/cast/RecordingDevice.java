@@ -16,7 +16,9 @@
 
 package dev.nick.systemrecapi.cast;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaCodec;
@@ -28,6 +30,7 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.ContextCompat;
 
 import org.newstand.logger.Logger;
 
@@ -268,6 +271,17 @@ public class RecordingDevice extends EncoderDevice {
 
                     // now that we have the Magic Goodies, start the muxer
                     trackIndex = muxer.addTrack(newFormat);
+
+
+                    // Check permission.
+                    if (mAudioSource == AudioSource.R_SUBMIX &&
+                            ContextCompat.checkSelfPermission(context, Manifest.permission.CAPTURE_AUDIO_OUTPUT)
+                                    != PackageManager.PERMISSION_GRANTED) {
+                        mAudioSource = AudioSource.NOOP;
+                        Logger.e("Not using SUBMIX Source: Missing permission");
+                    }
+
+
                     if (mAudioSource != AudioSource.NOOP) {
                         audio = new AudioRecorder(this);
                         Semaphore semaphore = new Semaphore(0);

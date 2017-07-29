@@ -362,6 +362,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
     boolean startInternal() {
         Logger.d("startInternal");
 
+        if (mRecRequest == null) return false;
+
         if (!hasAvailableSpace()) {
             ThreadUtil.getMainThreadHandler().post(new Runnable() {
                 @Override
@@ -473,7 +475,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
         Logger.d("stopCasting");
         cleanup();
 
-        if (mIsCasting && mRecRequest.isShutterSound()) {
+        if (mIsCasting && mRecRequest != null && mRecRequest.isShutterSound()) {
             mSoundPool.play(mStopSound, 1.0f, 1.0f, 0, 0, 1.0f);
         }
         mIsCasting = false;
@@ -728,7 +730,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
 
         @Override
         public String getVersionName() throws RemoteException {
-            return dev.nick.library.BuildConfig.VERSION_NAME;
+            return BuildConfig.VERSION_NAME;
         }
 
         @Override
