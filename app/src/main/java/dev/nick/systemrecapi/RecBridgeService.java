@@ -116,7 +116,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
                     intent.getAction().equals(Intent.ACTION_SHUTDOWN)) {
                 stop();
             } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                if (mIsCasting && mRecRequest != null && mRecRequest.isStopOnShake()) {
+                if (mIsCasting && mRecRequest != null && mRecRequest.isStopOnScreenOff()) {
                     stop();
                 }
             }

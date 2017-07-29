@@ -1,5 +1,6 @@
 package dev.nick.systemrecapi.ui;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.media.projection.MediaProjection;
@@ -8,6 +9,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.tbruyelle.rxpermissions2.RxPermissions;
+
 import org.newstand.logger.Logger;
 
 import dev.nick.eventbus.EventBus;
@@ -15,6 +18,7 @@ import dev.nick.systemrecapi.Events;
 import dev.nick.systemrecapi.R;
 import dev.nick.systemrecapi.RecBridgeApp;
 import dev.nick.systemrecapi.cast.ThreadUtil;
+import io.reactivex.functions.Consumer;
 import lombok.experimental.var;
 
 /**
@@ -26,7 +30,7 @@ public class RecBridgeActivity extends AppCompatActivity {
 
     private static final int PERMISSION_CODE = 1;
 
-    private static final long REQUEST_HANDLE_DELAY = 1000;
+    private static final long REQUEST_HANDLE_DELAY = 500;
 
     public static final String ACTION_START_REC = "nick.action.start";
 
@@ -34,12 +38,28 @@ public class RecBridgeActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_rec_bridge);
-        ThreadUtil.getMainThreadHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                resolveIntent();
-            }
-        }, REQUEST_HANDLE_DELAY);
+        resolveIntentChecked();
+    }
+
+    private void resolveIntentChecked() {
+        RxPermissions rxPermissions = new RxPermissions(this);
+        rxPermissions.request(Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .subscribe(new Consumer<Boolean>() {
+                    @Override
+                    public void accept(Boolean granted) throws Exception {
+                        if (granted) {
+                            ThreadUtil.getMainThreadHandler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    resolveIntent();
+                                }
+                            }, REQUEST_HANDLE_DELAY);
+                        } else {
+                            finish();
+                        }
+                    }
+                });
     }
 
     private void resolveIntent() {

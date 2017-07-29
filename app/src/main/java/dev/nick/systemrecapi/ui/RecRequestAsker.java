@@ -29,10 +29,14 @@ public class RecRequestAsker {
                                   final Callback callback) {
         AlertDialog alertDialog = new AlertDialog.Builder(context)
                 .setTitle(R.string.rec_bridge_request_title)
-                .setMessage(context.getString(R.string.rec_bridge_request_message,
-                        getApplicationName(context, packageName))
-                        + "\n"
-                        + description)
+                .setMessage(description == null ?
+                        context.getString(R.string.rec_bridge_request_message,
+                                getApplicationName(context, packageName))
+                        :
+                        context.getString(R.string.rec_bridge_request_message,
+                                getApplicationName(context, packageName))
+                                + "\n"
+                                + description)
                 .setCancelable(false)
                 .setPositiveButton(R.string.rec_bridge_request_allow, new DialogInterface.OnClickListener() {
                     @Override
