@@ -1,5 +1,7 @@
 package dev.nick.library;
 
+import org.newstand.logger.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,12 +79,13 @@ public abstract class ValidResolutions {
     };
 
     public static int indexOf(String res) {
+        Logger.i("index of:" + res);
         for (int i = 0; i < DESC.length; i++) {
             if (DESC[i].equalsIgnoreCase(res.trim())) {
                 return i;
             }
         }
-        throw new IllegalArgumentException("Bad res:" + res);
+        return INDEX_MASK_AUTO;
     }
 
     public static List<String> string() {
