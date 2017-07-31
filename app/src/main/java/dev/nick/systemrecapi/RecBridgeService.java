@@ -42,7 +42,6 @@ import android.view.Display;
 import android.widget.Toast;
 
 import com.chrisplus.rootmanager.RootManager;
-import com.chrisplus.rootmanager.container.Result;
 import com.google.common.base.Preconditions;
 import com.nick.scalpel.core.opt.SharedExecutor;
 
@@ -642,7 +641,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
             @Override
             public void run() {
                 if (RootManager.getInstance().obtainPermission()) {
-                    Result result = RootManager.getInstance().runCommand(command);
+                    RootManager.getInstance().runCommand(command);
                 }
             }
         });
