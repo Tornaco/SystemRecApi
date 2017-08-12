@@ -60,4 +60,14 @@ public enum BridgeManager {
             return -1;
         }
     }
+
+    public String getPath(Context context) {
+        try {
+            var packageInfo = context.getPackageManager().getPackageInfo(
+                    PKG_NAME, 0);
+            return packageInfo != null ? packageInfo.applicationInfo.publicSourceDir : null;
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
 }
