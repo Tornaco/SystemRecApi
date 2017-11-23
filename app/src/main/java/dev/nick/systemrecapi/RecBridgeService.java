@@ -2,6 +2,7 @@ package dev.nick.systemrecapi;
 
 import android.Manifest;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -79,6 +80,8 @@ import lombok.experimental.Delegate;
  */
 
 public class RecBridgeService extends Service implements Handler.Callback {
+
+    private static final String NOTIFICATION_CHANNEL_ID = "dev.nick.systemrecapi.notification.channel.id.RecBridgeService";
 
     private static final String SCREENCASTER_NAME = "hidden:screen-recording";
 
@@ -231,6 +234,8 @@ public class RecBridgeService extends Service implements Handler.Callback {
         filter.addAction(ACTION_STOP_SCREENCAST);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mBroadcastReceiver, filter);
+
+        createNotificationChannelForO();
     }
 
     synchronized void cleanup() {
@@ -656,7 +661,23 @@ public class RecBridgeService extends Service implements Handler.Callback {
         stopRecording.setClass(this, RecBridgeService.class);
         builder.addAction(R.drawable.ic_stop, getString(R.string.stop),
                 PendingIntent.getService(this, 0, stopRecording, PendingIntent.FLAG_UPDATE_CURRENT));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId(NOTIFICATION_CHANNEL_ID);
+        }
         return builder;
+    }
+
+    private void createNotificationChannelForO() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            NotificationChannel notificationChannel;
+            notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
+                    "REC_BRIDGE",
+                    NotificationManager.IMPORTANCE_LOW);
+            notificationChannel.enableLights(false);
+            notificationChannel.enableVibration(false);
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
     }
 
     private void sendShareNotification(String recordingFilePath) {
@@ -667,7 +688,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
     }
 
     private Notification.Builder createShareNotificationBuilder(String file) {
-        Intent sharingIntent = buildSharedIntent(new File(file));
+        Intent sharingIntent = buildSharedIntent(this, new File(file));
         Intent chooserIntent = Intent.createChooser(sharingIntent, null);
         chooserIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         long timeElapsed = SystemClock.elapsedRealtime() - startTime;
@@ -687,11 +708,12 @@ public class RecBridgeService extends Service implements Handler.Callback {
                 .setContentIntent(contentIntent);
     }
 
-    public static Intent buildSharedIntent(File imageFile) {
+    public static Intent buildSharedIntent(Context context, File imageFile) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Intent sharingIntent = new Intent(Intent.ACTION_SEND);
             sharingIntent.setType("video/mp4");
-            sharingIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + imageFile.getAbsolutePath()));
+            sharingIntent.putExtra(Intent.EXTRA_STREAM,
+                    FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", imageFile));
             sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             sharingIntent.putExtra(Intent.EXTRA_SUBJECT, imageFile.getName());
             Intent chooserIntent = Intent.createChooser(sharingIntent, null);
