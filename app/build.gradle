@@ -8,8 +8,8 @@ android {
         applicationId "dev.nick.systemrecapi"
         minSdkVersion 21
         targetSdkVersion 26
-        versionCode 17
-        versionName "1.7"
+        versionCode 18
+        versionName "1.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
