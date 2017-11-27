@@ -13,9 +13,10 @@
 			maven { url 'https://jitpack.io' }
 		}
 	}
-```gradle
-* Add the dependency
 ```
+
+* Add the dependency
+```gradle
 dependencies {compile 'com.github.Tornaco:SystemRecApi:v1.3'}
 ```
 
