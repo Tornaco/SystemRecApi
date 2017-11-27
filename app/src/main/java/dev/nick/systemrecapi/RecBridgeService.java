@@ -645,7 +645,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
     private void updateShowTouchSettings(boolean show) {
         Logger.d("updateShowTouchSettings: " + show);
         try {
-            Settings.System.putInt(getContentResolver(), Settings.System.SHOW_TOUCHES, show ? 1 : 0);
+            Settings.System.putInt(getContentResolver(), "show_touches", show ? 1 : 0);
         } catch (Throwable e) {
             Logger.e("Fail updateShowTouchSettings: " + Logger.getStackTraceString(e));
         }
