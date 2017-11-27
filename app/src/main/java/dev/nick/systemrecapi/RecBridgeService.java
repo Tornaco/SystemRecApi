@@ -32,6 +32,7 @@ import android.os.RemoteException;
 import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -42,9 +43,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.widget.Toast;
 
-import com.chrisplus.rootmanager.RootManager;
 import com.google.common.base.Preconditions;
-import com.nick.scalpel.core.opt.SharedExecutor;
 
 import org.newstand.logger.Logger;
 
@@ -463,7 +462,11 @@ public class RecBridgeService extends Service implements Handler.Callback {
         assert mRecorder == null;
         Point size = getNativeResolution();
         mRecorder = new RecordingDevice(this, size.x, size.y,
-                mRecRequest.getAudioSource(), mRecRequest.getOrientation(), mRecRequest.getFrameRate(), mRecRequest.getPath());
+                mRecRequest.getAudioSource(),
+                mRecRequest.getOrientation(),
+                mRecRequest.getFrameRate(),
+                mRecRequest.getAudioBitrate(),
+                mRecRequest.getPath());
         boolean useProjection = mRecRequest.isUseMediaProjection();
         VirtualDisplay vd =
                 useProjection ?
@@ -640,16 +643,12 @@ public class RecBridgeService extends Service implements Handler.Callback {
     }
 
     private void updateShowTouchSettings(boolean show) {
-        final String command = String.format("settings put %s %s %s",
-                "system", "show_touches", show ? "1" : "0");
-        SharedExecutor.get().execute(new Runnable() {
-            @Override
-            public void run() {
-                if (RootManager.getInstance().obtainPermission()) {
-                    RootManager.getInstance().runCommand(command);
-                }
-            }
-        });
+        Logger.d("updateShowTouchSettings: " + show);
+        try {
+            Settings.System.putInt(getContentResolver(), Settings.System.SHOW_TOUCHES, show ? 1 : 0);
+        } catch (Throwable e) {
+            Logger.e("Fail updateShowTouchSettings: " + Logger.getStackTraceString(e));
+        }
     }
 
     private Notification.Builder createNotificationBuilder() {

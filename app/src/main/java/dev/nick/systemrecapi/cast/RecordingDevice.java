@@ -44,12 +44,17 @@ import dev.nick.library.AudioSource;
 public class RecordingDevice extends EncoderDevice {
 
     private File mFile;
-    private int mAudioSource;
+    private int mAudioSource, mBitRate;
 
-    public RecordingDevice(Context context, int width, int height, int audioSource, int orientation, int fr, String path) {
+    public RecordingDevice(Context context, int width, int height,
+                           int audioSource, int orientation,
+                           int fr,
+                           int bitrate,
+                           String path) {
         super(context, width, height, orientation, fr);
         this.mFile = new File(path);
         this.mAudioSource = audioSource;
+        this.mBitRate = bitrate;
     }
 
     /**
@@ -140,7 +145,7 @@ public class RecordingDevice extends EncoderDevice {
             }
             format = new MediaFormat();
             format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
-            format.setInteger(MediaFormat.KEY_BIT_RATE, 64 * 1024);
+            format.setInteger(MediaFormat.KEY_BIT_RATE, mBitRate);// 64k --64 * 1024 suggest.
             format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
             format.setInteger(MediaFormat.KEY_SAMPLE_RATE, 44100);
             format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectHE);
