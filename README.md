@@ -6,14 +6,14 @@
 [![](https://jitpack.io/v/Tornaco/SystemRecApi.svg)](https://jitpack.io/#Tornaco/SystemRecApi)
 
 * Add it in your root build.gradle at the end of repositories:
-```
+```gradle
 	allprojects {
 		repositories {
 			...
 			maven { url 'https://jitpack.io' }
 		}
 	}
-```
+```gradle
 * Add the dependency
 ```
 dependencies {compile 'com.github.Tornaco:SystemRecApi:v1.3'}
@@ -27,12 +27,12 @@ dependencies {compile 'com.github.Tornaco:SystemRecApi:v1.3'}
 所有API均集成于```RecBridgeServiceProxy```
 
 1. 获取其实例
-```
+```java
 RecBridgeServiceProxy proxy = RecBridgeServiceProxy.from(this);
 ```
 
 2. 开始录制
-```
+```java
  RecBridgeServiceProxy.from(context)
                     .start(IParam.builder()
                                     .audioSource(settingsProvider.getInt(SettingsProvider.Key.AUDIO_SOURCE))
@@ -51,12 +51,12 @@ RecBridgeServiceProxy proxy = RecBridgeServiceProxy.from(this);
 ```
 
 3. 停止录制
-```
+```java
 proxy.stop();
 ```
 
 4. 监听(sticky)
-```
+```java
 proxy.watch(new IWatcher.Stub() {
             @Override
             public void onStart() throws RemoteException {
