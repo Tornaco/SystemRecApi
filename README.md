@@ -5,7 +5,7 @@
 ### 客户端Gradle编译
 [![](https://jitpack.io/v/Tornaco/SystemRecApi.svg)](https://jitpack.io/#Tornaco/SystemRecApi)
 
-1. Add it in your root build.gradle at the end of repositories:
+* Add it in your root build.gradle at the end of repositories:
 ```
 	allprojects {
 		repositories {
@@ -14,11 +14,9 @@
 		}
 	}
 ```
-2. Add the dependency
+* Add the dependency
 ```
-dependencies {
-	        compile 'com.github.Tornaco:SystemRecApi:v1.3'
-	}
+dependencies {compile 'com.github.Tornaco:SystemRecApi:v1.3'}
 ```
 
 ### Build in travis
