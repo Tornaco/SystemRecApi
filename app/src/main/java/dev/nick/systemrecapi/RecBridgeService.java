@@ -494,6 +494,7 @@ public class RecBridgeService extends Service implements Handler.Callback {
         }
 
         notifyUncasting();
+        updateShowTouchSettings(false);
     }
 
     @Override
