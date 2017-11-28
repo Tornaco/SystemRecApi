@@ -1,22 +1,22 @@
 <resources>
-    <string name="app_name">Recording service</string>
+    <string name="app_name">ScreenRec Pro</string>
 
     <string name="rec_bridge_resolve">""</string>
-    <string name="rec_bridge_request_title">Recording service</string>
-    <string name="rec_bridge_request_message">Allow <b>%1$s</b> to record your screen or voice ?</string>
-    <string name="rec_bridge_request_allow">Allow</string>
-    <string name="rec_bridge_request_deny">Deny</string>
-    <string name="rec_bridge_request_remember">Allow <b>%1$s</b> to screen recording?</string>
+    <string name="rec_bridge_request_title">Servicio de grabación</string>
+    <string name="rec_bridge_request_message">Permitir <b>%1$s</b> grabar la pantalla o tu voz?</string>
+    <string name="rec_bridge_request_allow">Permitir</string>
+    <string name="rec_bridge_request_deny">Denegar</string>
+    <string name="rec_bridge_request_remember">Permitir <b>%1$s</b> grabar la pantalla?</string>
 
-    <string name="insufficient_storage">Insufficient storage</string>
+    <string name="insufficient_storage">Almacenamiento insuficiente</string>
 
-    <string name="not_enough_storage">Not enough storage available</string>
-    <string name="not_projection">Missing media projection permission</string>
+    <string name="not_enough_storage">No hay suficiente espacio de almacenamiento</string>
+    <string name="not_projection">Permiso para medios de proyección perdida</string>
 
-    <string name="share">Share</string>
-    <string name="stop">Stop</string>
+    <string name="share">Compartir</string>
+    <string name="stop">Parar</string>
 
-    <string name="recording">Recording\u2026</string>
-    <string name="recording_ready_to_share">Recording ready to share</string>
-    <string name="video_length">Video length: %s</string>
+    <string name="recording">Grabando\u2026</string>
+    <string name="recording_ready_to_share">Grabación lista para compartir</string>
+    <string name="video_length">Duración: %s</string>
 </resources>
